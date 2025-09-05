@@ -25,24 +25,33 @@ router.post("/signup", async (req, res) => {
 
 router.post("/login", async (req, res) => {
   try {
-    const data = req.body;
-    const user = await User.findOne({ email: data.email });
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+
     if (!user) {
-      res.status(400).send("user not found");
-    } else {
-      const isMatch = bcrypt.compareSync(data.password, user.password);
-      if (!isMatch) {
-        res.status(400).send("Invalid password");
-      } else {
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-          expiresIn: "7d",
-        });
-        res.status(200).json(user);
-      }
+      return res.status(400).json({ message: "User not found" });
     }
+
+    const isMatch = bcrypt.compareSync(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid password" });
+    }
+
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // remove password before sending back
+    const { password: _, ...userData } = user._doc;
+
+    res.status(200).json({ token, user: userData });
   } catch (error) {
-    res.status(500).json(error);
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Server error", error });
   }
 });
+
 
 module.exports = router;
