@@ -10,6 +10,7 @@ const app = express();
 
 app.use(cors({
   origin: 'http://localhost:5173',
+  'http://social-network-frontend-cc8i.vercel.app'
   credentials: true // If you're sending cookies or auth headers
 }));
 app.use(express.json());
